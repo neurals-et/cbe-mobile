@@ -1,5 +1,5 @@
 """
-Core API Client for CBE Mobile Banking
+CBE Mobile Banking Client
 """
 
 import json

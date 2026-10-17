@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cbe-mobile"
 version = "0.1.0"
-description = "Unofficial Commercial Bank of Ethiopia (CBE Mobile) Python SDK and Interactive TUI"
+description = "CBE Mobile Banking Python SDK and Terminal UI"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [

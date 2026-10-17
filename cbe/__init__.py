@@ -1,6 +1,5 @@
 """
-CBE Mobile Banking Unofficial Python Client & Interactive TUI
-Reverse-engineered from Commercial Bank of Ethiopia (com.combanketh.mobilebanking)
+CBE Mobile Banking Python Client & TUI
 """
 
 from .config import CBEConfig
