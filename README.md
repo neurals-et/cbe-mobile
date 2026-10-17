@@ -32,13 +32,22 @@ cbe
 
 ### CLI Commands
 ```bash
-# Set your session JWT token and credentials
+# Log in with Phone + PIN (direct JWT issuance)
+cbe login --phone +251911000000 --pin 1234
+
+# Or request an SMS OTP code
+cbe login --phone +251911000000 --otp
+
+# Verify OTP and save session JWT automatically
+cbe verify-otp <code> --tfa <TFA_TOKEN>
+
+# Set token manually
 cbe config --token <your_jwt_token> --live
 
 # Check balances
 cbe balance
 
-# Look up account name
+# Look up recipient name
 cbe lookup <account_number>
 
 # Check daily forex rates

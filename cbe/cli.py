@@ -31,6 +31,17 @@ def main():
     # forex command
     subparsers.add_parser("forex", help="Fetch CBE live daily exchange rates")
 
+    # login command
+    login_p = subparsers.add_parser("login", help="Log in with Phone + PIN or request SMS OTP")
+    login_p.add_argument("--phone", "-p", required=True, help="Phone number (+251...)")
+    login_p.add_argument("--pin", help="4-digit CBE mobile banking PIN")
+    login_p.add_argument("--otp", action="store_true", help="Request SMS OTP code instead of PIN")
+
+    # verify-otp command
+    otp_p = subparsers.add_parser("verify-otp", help="Verify SMS OTP and save session JWT")
+    otp_p.add_argument("code", help="SMS OTP code received on phone")
+    otp_p.add_argument("--tfa", required=True, help="TFA token received from login/otp request")
+
     # config command
     cfg_p = subparsers.add_parser("config", help="View or update credentials and settings")
     cfg_p.add_argument("--token", help="Set JWT Access Token")
@@ -65,6 +76,37 @@ def main():
         print(f"=== CBE Daily Forex Rates ({res.get('source')}) ===")
         for r in res.get("rates", []):
             print(f"{r.get('currency', '-'):6} | Buying: {r.get('buying', 0):8.2f} ETB | Selling: {r.get('selling', 0):8.2f} ETB | {r.get('name', '')}")
+
+    elif args.command == "login":
+        client = CBEClient()
+        if args.otp:
+            res = client.request_otp(args.phone)
+            print(f"Status:   {res.get('status')}")
+            print(f"Message:  {res.get('message')}")
+            print(f"TFA Token: {res.get('tfaToken')}")
+            print("\nRun: cbe verify-otp <code> --tfa <TFA_TOKEN> to complete login.")
+        else:
+            if not args.pin:
+                print("Error: --pin is required (or use --otp to request SMS code).", file=sys.stderr)
+                sys.exit(1)
+            res = client.sign_in_pin(args.phone, args.pin)
+            if res.get("status") == "SUCCESS":
+                print("[OK] Logged in successfully!")
+                print(f"Customer: {res.get('user', {}).get('fullName')}")
+                print(f"JWT Token: {res.get('accessToken')[:30]}...")
+            else:
+                print(f"Login failed: {res}")
+
+    elif args.command == "verify-otp":
+        client = CBEClient()
+        res = client.verify_otp(args.tfa, args.code)
+        if res.get("status") == "SUCCESS":
+            token = res.get("accessToken")
+            print("[OK] OTP verified successfully!")
+            print(f"Session JWT saved: {token[:30]}...")
+            print("You are now authenticated for live CBE queries.")
+        else:
+            print(f"Verification failed: {res}")
 
     elif args.command == "config":
         cfg = CBEConfig()

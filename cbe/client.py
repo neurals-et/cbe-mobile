@@ -55,6 +55,7 @@ class CBEClient:
             return {
                 "status": "SUCCESS",
                 "accessToken": self.token,
+                "tfaRequired": False,
                 "tokenType": "Bearer",
                 "expiresIn": 1800,
                 "user": {
@@ -62,6 +63,47 @@ class CBEClient:
                     "fullName": "Abebe Kebede",
                     "customerId": "CBE9941028"
                 }
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    def request_otp(self, phone: str) -> Dict[str, Any]:
+        """POST /v1/auth/two-factor/request-token - Send OTP to registered mobile."""
+        if self.config.get("mock_mode"):
+            tfa_token = f"tfa_token_{int(time.time())}"
+            return {
+                "status": "SUCCESS",
+                "message": f"OTP sent to {phone}",
+                "tfaToken": tfa_token,
+                "expiresIn": 180
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    def verify_otp(self, tfa_token: str, otp: str) -> Dict[str, Any]:
+        """POST /v1/auth/two-factor/validate - Verify SMS OTP and obtain JWT."""
+        if self.config.get("mock_mode"):
+            self.token = f"cbe_jwt_verified_{int(time.time())}"
+            self.config.set("access_token", self.token)
+            self.config.set("mock_mode", False)  # auto-enable live once authenticated
+            self.config.save()
+            return {
+                "status": "SUCCESS",
+                "accessToken": self.token,
+                "tokenType": "Bearer",
+                "expiresIn": 1800
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    def verify_passphrase(self, tfa_token: str, passphrase: str) -> Dict[str, Any]:
+        """POST /v1/auth/two-factor/verify-token-with-passphrase - Verify user passphrase."""
+        if self.config.get("mock_mode"):
+            self.token = f"cbe_jwt_passphrase_{int(time.time())}"
+            self.config.set("access_token", self.token)
+            self.config.save()
+            return {
+                "status": "SUCCESS",
+                "accessToken": self.token,
+                "tokenType": "Bearer",
+                "expiresIn": 1800
             }
         return {"status": "PENDING_GATEWAY"}
 
