@@ -4,6 +4,17 @@ Python client and interactive terminal interface for CBE Mobile Banking.
 
 ---
 
+## Features
+
+- **Name Lookup**: Instant recipient name resolution before transfers.
+- **Transfers**: Internal CBE and EthSwitch interbank transfers.
+- **Cardless ATM**: Generate 6-digit withdrawal codes for cardless cash pickup.
+- **Bills & Tolls**: Pay utilities (Ethio Telecom, Water, Electricity) and top up Expressway passes.
+- **Forex Ticker**: Live daily exchange rates feed.
+- **Terminal UI**: Interactive Textual dashboard and standalone CLI commands.
+
+---
+
 ## Installation
 
 ```bash
