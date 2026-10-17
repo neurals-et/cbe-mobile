@@ -42,6 +42,35 @@ def main():
     otp_p.add_argument("code", help="SMS OTP code received on phone")
     otp_p.add_argument("--tfa", required=True, help="TFA token received from login/otp request")
 
+    # cards command
+    crd_p = subparsers.add_parser("cards", help="Manage debit cards")
+    crd_p.add_argument("--request", choices=["VISA_DEBIT", "MASTERCARD_VIRTUAL"], help="Request a new card")
+
+    # loans command
+    loan_p = subparsers.add_parser("loans", help="Digital microloans (CBE credit)")
+    loan_p.add_argument("--request", type=float, help="Request loan disbursal amount")
+    loan_p.add_argument("--repay", help="Repay loan by ID")
+    loan_p.add_argument("--amount", type=float, help="Repay amount")
+
+    # beneficiaries command
+    ben_p = subparsers.add_parser("beneficiaries", help="Saved transfer contacts")
+    ben_p.add_argument("--add", help="Account number to add")
+    ben_p.add_argument("--name", help="Account holder name")
+    ben_p.add_argument("--bank", default="CBE", help="Bank name (default: CBE)")
+
+    # receipt command
+    rcpt_p = subparsers.add_parser("receipt", help="Verify and view transaction receipt")
+    rcpt_p.add_argument("id", help="Transaction reference / ID")
+
+    # scheduled command
+    subparsers.add_parser("scheduled", help="View scheduled auto-transfers")
+
+    # split command
+    split_p = subparsers.add_parser("split", help="Initiate split bill request")
+    split_p.add_argument("amount", type=float, help="Total bill amount")
+    split_p.add_argument("--with-users", required=True, nargs="+", help="Phone numbers / accounts to split with")
+    split_p.add_argument("--reason", default="Dinner / Group Bill", help="Reason for split")
+
     # config command
     cfg_p = subparsers.add_parser("config", help="View or update credentials and settings")
     cfg_p.add_argument("--token", help="Set JWT Access Token")
@@ -107,6 +136,73 @@ def main():
             print("You are now authenticated for live CBE queries.")
         else:
             print(f"Verification failed: {res}")
+
+    elif args.command == "cards":
+        client = CBEClient()
+        if args.request:
+            r = client.request_card(client.config.get("account_number"), args.request)
+            print(f"[OK] Card requested! Reference: {r.get('referenceNumber')}")
+        else:
+            res = client.get_cards()
+            print("=== Linked CBE Cards ===")
+            for c in res.get("cards", []):
+                print(f"[{c['cardType']}] {c['maskedNumber']} (Exp: {c['expiry']}) -> {c['status']}")
+
+    elif args.command == "loans":
+        client = CBEClient()
+        if args.request:
+            r = client.request_loan(args.request)
+            print(f"[OK] Microloan approved! ID: {r.get('loanId')} | Amount: {r.get('disbursedAmount')} ETB (Due: {r.get('dueDate')})")
+        elif args.repay:
+            amt = args.amount or 1000.0
+            r = client.repay_loan(args.repay, amt)
+            print(f"[OK] Microloan repayment successful! Receipt: {r.get('receiptNumber')}")
+        else:
+            d = client.get_loan_dashboard()
+            print(f"=== CBE Digital Microloans (Eligible: {d.get('eligible')}) ===")
+            print(f"Credit Limit: {d.get('maxCreditLimit'):,.2f} ETB")
+            curr = d.get("currentLoan", {})
+            if curr:
+                print(f"Active Loan:  {curr.get('loanId')} | {curr.get('remainingAmount')} ETB due on {curr.get('dueDate')}")
+
+    elif args.command == "beneficiaries":
+        client = CBEClient()
+        if args.add:
+            name = args.name or "Contact"
+            r = client.add_beneficiary(args.add, name, args.bank)
+            print(f"[OK] Beneficiary added: {r.get('name')} ({r.get('accountNumber')})")
+        else:
+            bens = client.get_beneficiaries()
+            print("=== Saved Transfer Contacts ===")
+            for b in bens:
+                print(f"  - {b['name']}: {b['accountNumber']} ({b['bank']})")
+
+    elif args.command == "receipt":
+        client = CBEClient()
+        r = client.get_transaction_receipt(args.id)
+        print("=== Official CBE Digital Receipt ===")
+        print(f"Txn ID:    {r.get('transactionId')}")
+        print(f"Reference: {r.get('reference')}")
+        print(f"Payer:     {r.get('payer')}")
+        print(f"Payee:     {r.get('payee')}")
+        print(f"Amount:    {r.get('amount'):,.2f} ETB")
+        print(f"Date:      {r.get('paymentDate')}")
+        print(f"Status:    VERIFIED OFFICIAL")
+
+    elif args.command == "scheduled":
+        client = CBEClient()
+        scheds = client.get_scheduled_payments()
+        print("=== Scheduled Recurring Payments ===")
+        for s in scheds:
+            print(f"  - [{s['id']}] {s['title']}: {s['amount']:,.2f} ETB to {s['toAccount']} ({s['frequency']}, Next: {s['nextRun']})")
+
+    elif args.command == "split":
+        client = CBEClient()
+        r = client.initiate_split_payment(args.amount, args.with_users, args.reason)
+        print(f"[OK] Split Bill initiated! ID: {r.get('splitId')}")
+        print(f"Total:      {r.get('totalAmount'):,.2f} ETB")
+        print(f"Per Person: {r.get('amountPerPerson'):,.2f} ETB")
+        print(f"With:       {', '.join(r.get('participants', []))}")
 
     elif args.command == "config":
         cfg = CBEConfig()

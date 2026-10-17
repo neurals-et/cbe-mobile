@@ -276,3 +276,163 @@ class CBEClient:
                     {"currency": "GBP", "name": "POUND STERLING", "buying": 160.10, "selling": 163.30}
                 ]
             }
+
+    # ------------------ Card Management ------------------
+
+    def get_cards(self) -> Dict[str, Any]:
+        """GET /v1/customer/cards"""
+        if self.config.get("mock_mode"):
+            return {
+                "status": "SUCCESS",
+                "cards": [
+                    {
+                        "cardId": "crd_9018",
+                        "cardType": "PHYSICAL_VISA",
+                        "maskedNumber": "4234-XXXX-XXXX-9018",
+                        "expiry": "09/28",
+                        "status": "ACTIVE",
+                        "linkedAccount": self.config.get("account_number")
+                    },
+                    {
+                        "cardId": "crd_4421",
+                        "cardType": "VIRTUAL_MASTERCARD",
+                        "maskedNumber": "5312-XXXX-XXXX-4421",
+                        "expiry": "11/27",
+                        "status": "ACTIVE",
+                        "linkedAccount": self.config.get("account_number")
+                    }
+                ]
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    def request_card(self, account_number: str, card_type: str = "VISA_DEBIT") -> Dict[str, Any]:
+        """POST /v1/accounts/card/request"""
+        if self.config.get("mock_mode"):
+            return {
+                "status": "SUCCESS",
+                "referenceNumber": f"CRD-REQ-{int(time.time())}",
+                "accountNumber": account_number,
+                "cardType": card_type,
+                "status": "SUBMITTED"
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    # ------------------ Microloans & Credit ------------------
+
+    def get_loan_dashboard(self) -> Dict[str, Any]:
+        """GET /v1/loan/dashboard"""
+        if self.config.get("mock_mode"):
+            return {
+                "status": "SUCCESS",
+                "eligible": True,
+                "maxCreditLimit": 20000.00,
+                "currentLoan": {
+                    "loanId": "LN-58291",
+                    "amount": 3500.00,
+                    "interestRate": 2.5,
+                    "dueDate": time.strftime("%Y-%m-%d", time.localtime(time.time() + 86400 * 20)),
+                    "remainingAmount": 3587.50
+                }
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    def request_loan(self, amount: float, term_days: int = 30) -> Dict[str, Any]:
+        """POST /v1/loan/request-loan"""
+        if self.config.get("mock_mode"):
+            return {
+                "status": "SUCCESS",
+                "loanId": f"LN-{int(time.time()) % 100000}",
+                "disbursedAmount": amount,
+                "account": self.config.get("account_number"),
+                "termDays": term_days,
+                "dueDate": time.strftime("%Y-%m-%d", time.localtime(time.time() + 86400 * term_days)),
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    def repay_loan(self, loan_id: str, amount: float) -> Dict[str, Any]:
+        """POST /v1/loan/repay-loan"""
+        if self.config.get("mock_mode"):
+            return {
+                "status": "SUCCESS",
+                "receiptNumber": f"LN-REP-{int(time.time())}",
+                "loanId": loan_id,
+                "paidAmount": amount,
+                "remaining": 0.00,
+                "status": "CLEARED"
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    # ------------------ Beneficiaries ------------------
+
+    def get_beneficiaries(self) -> List[Dict[str, Any]]:
+        """GET /v1/users/me/beneficiaries"""
+        if self.config.get("mock_mode"):
+            return [
+                {"id": "b1", "name": "Tigist Haile", "accountNumber": "1000987654321", "bank": "CBE"},
+                {"id": "b2", "name": "Dawit Tesfaye", "accountNumber": "1000554433221", "bank": "CBE"},
+                {"id": "b3", "name": "Almaz Ayana", "accountNumber": "0911556677", "bank": "AWASH"}
+            ]
+        return []
+
+    def add_beneficiary(self, account_number: str, name: str, bank: str = "CBE") -> Dict[str, Any]:
+        """POST /v1/users/me/beneficiaries"""
+        if self.config.get("mock_mode"):
+            return {
+                "status": "SUCCESS",
+                "beneficiaryId": f"b_{int(time.time())}",
+                "name": name,
+                "accountNumber": account_number,
+                "bank": bank
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    # ------------------ Scheduled & Split Payments ------------------
+
+    def get_scheduled_payments(self) -> List[Dict[str, Any]]:
+        """GET /v1/scheduled-payments"""
+        if self.config.get("mock_mode"):
+            return [
+                {
+                    "id": "sch_01",
+                    "title": "House Rent",
+                    "toAccount": "1000987654321",
+                    "amount": 15000.00,
+                    "frequency": "MONTHLY",
+                    "nextRun": time.strftime("%Y-%m-01")
+                }
+            ]
+        return []
+
+    def initiate_split_payment(self, total_amount: float, participants: List[str], reason: str = "") -> Dict[str, Any]:
+        """POST /v1/split-payments/init"""
+        if self.config.get("mock_mode"):
+            each = round(total_amount / max(1, len(participants)), 2)
+            return {
+                "status": "SUCCESS",
+                "splitId": f"SPL-{int(time.time())}",
+                "totalAmount": total_amount,
+                "amountPerPerson": each,
+                "participants": participants,
+                "reason": reason
+            }
+        return {"status": "PENDING_GATEWAY"}
+
+    # ------------------ Public Transaction Receipt Verification ------------------
+
+    def get_transaction_receipt(self, txn_id: str) -> Dict[str, Any]:
+        """GET /v1/transactions/public/transaction-detail/{txnId}"""
+        if self.config.get("mock_mode"):
+            return {
+                "status": "SUCCESS",
+                "transactionId": txn_id,
+                "payer": "Abebe Kebede (1000****789)",
+                "payee": "Tigist Haile (1000****321)",
+                "amount": 2500.00,
+                "fee": 0.00,
+                "vat": 0.00,
+                "paymentDate": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "reference": f"CBE-REF-{txn_id}",
+                "verified": True
+            }
+        return {"status": "PENDING_GATEWAY"}

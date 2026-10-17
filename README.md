@@ -9,6 +9,11 @@ Python client and interactive terminal interface for CBE Mobile Banking.
 - **Name Lookup**: Instant recipient name resolution before transfers.
 - **Transfers**: Internal CBE and EthSwitch interbank transfers.
 - **Cardless ATM**: Generate 6-digit withdrawal codes for cardless cash pickup.
+- **Cards Management**: View and request physical/virtual debit cards.
+- **Digital Microloans**: Check eligibility, request loan disbursal, and repay.
+- **Beneficiaries**: Save and manage frequent transfer contacts.
+- **Split Payments**: Calculate and initiate group split bill requests.
+- **Digital Receipts**: Instant verification of public transaction details.
 - **Bills & Tolls**: Pay utilities (Ethio Telecom, Water, Electricity) and top up Expressway passes.
 - **Forex Ticker**: Live daily exchange rates feed.
 - **Terminal UI**: Interactive Textual dashboard and standalone CLI commands.
@@ -52,6 +57,23 @@ cbe lookup <account_number>
 
 # Check daily forex rates
 cbe forex
+
+# View linked cards / request new card
+cbe cards
+cbe cards --request VISA_DEBIT
+
+# Microloans dashboard / request loan
+cbe loans
+cbe loans --request 5000
+
+# Saved transfer contacts
+cbe beneficiaries
+
+# Verify official digital receipt
+cbe receipt <transaction_id>
+
+# Split bill with friends
+cbe split 1200 --with-users 0911000001 0911000002
 ```
 
 ### Python Library

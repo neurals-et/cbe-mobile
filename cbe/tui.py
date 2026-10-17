@@ -95,6 +95,14 @@ class CBEMobileTUI(App):
         background: #f59e0b;
     }
 
+    Button.success {
+        background: #047857;
+    }
+
+    Button.success:hover {
+        background: #059669;
+    }
+
     Input {
         margin-bottom: 1;
         border: solid #86198f;
@@ -108,7 +116,7 @@ class CBEMobileTUI(App):
     }
 
     DataTable {
-        height: 10;
+        height: 11;
         border: solid #701a75;
         background: #14051d;
     }
@@ -135,7 +143,7 @@ class CBEMobileTUI(App):
         with TabbedContent(initial="tab-dash"):
 
             # 1. DASHBOARD
-            with TabPane("Accounts & Dashboard", id="tab-dash"):
+            with TabPane("Dashboard", id="tab-dash"):
                 with ScrollableContainer():
                     with Horizontal():
                         with Vertical(classes="card bal-card"):
@@ -149,7 +157,7 @@ class CBEMobileTUI(App):
                             yield Label("Acc: 1000998877665", id="lbl-current-num")
 
                     with Container(classes="card"):
-                        yield Label("Customer Status", classes="card-title")
+                        yield Label("Customer Profile", classes="card-title")
                         yield Label(f"Phone: {self.config.get('phone_number')} | Customer: Abebe Kebede", id="lbl-cust-info")
                         yield Button("Refresh Balances", id="btn-refresh-dash")
 
@@ -157,7 +165,7 @@ class CBEMobileTUI(App):
                         yield Label("Recent Activity Stream", classes="card-title")
                         yield Log(id="log-dash")
 
-            # 2. TRANSFERS
+            # 2. TRANSFERS & CONTACTS
             with TabPane("Transfers", id="tab-transfers"):
                 with ScrollableContainer():
                     with Container(classes="card"):
@@ -203,7 +211,21 @@ class CBEMobileTUI(App):
                         yield Label("------", id="lbl-atm-code", classes="code-val")
                         yield Label("Valid for 2 hours at any CBE ATM.", id="lbl-atm-expiry")
 
-            # 4. BILLS & TOLL ROAD
+            # 4. CARDS MANAGEMENT
+            with TabPane("Cards", id="tab-cards"):
+                with ScrollableContainer():
+                    with Container(classes="card"):
+                        yield Label("Linked CBE Debit Cards", classes="card-title")
+                        yield DataTable(id="tbl-cards")
+                        yield Button("Refresh Cards", id="btn-refresh-cards")
+
+                    with Container(classes="card"):
+                        yield Label("Request New Debit Card", classes="card-title")
+                        yield Label("Card Brand & Type:")
+                        yield Select([("Visa Physical Debit Card", "VISA_DEBIT"), ("Mastercard Virtual Card", "MASTERCARD_VIRTUAL")], id="sel-new-card")
+                        yield Button("Submit Card Request", id="btn-card-req", classes="success")
+
+            # 5. BILL PAY & TOLL ROAD
             with TabPane("Bill Pay & Toll", id="tab-bills"):
                 with ScrollableContainer():
                     with Container(classes="card"):
@@ -224,20 +246,37 @@ class CBEMobileTUI(App):
                         yield Input(placeholder="300.00", id="inp-toll-amt")
                         yield Button("Recharge Toll Pass", id="btn-toll-pay")
 
-            # 5. FOREX & LOANS
-            with TabPane("Forex & Loans", id="tab-forex"):
+            # 6. DIGITAL MICROLOANS
+            with TabPane("Loans & Split", id="tab-loans"):
                 with ScrollableContainer():
                     with Container(classes="card"):
-                        yield Label("CBE Daily Forex Exchange Rates", classes="card-title")
+                        yield Label("CBE Digital Microloan (Credit)", classes="card-title")
+                        yield Label("Status: ELIGIBLE | Credit Line: 20,000.00 ETB", id="lbl-loan-status")
+                        yield Label("Active Loan: LN-58291 | 3,587.50 ETB due soon", id="lbl-loan-active")
+                        yield Label("Loan Amount to Request (ETB):")
+                        yield Input(placeholder="5000.00", id="inp-loan-req-amt")
+                        with Horizontal():
+                            yield Button("Disburse Loan", id="btn-loan-disburse", classes="success")
+                            yield Button("Repay Active Loan", id="btn-loan-repay", classes="accent")
+
+                    with Container(classes="card"):
+                        yield Label("Split Bill Calculator", classes="card-title")
+                        yield Label("Total Amount (ETB):")
+                        yield Input(placeholder="1200.00", id="inp-split-amt")
+                        yield Label("Participants (comma separated):")
+                        yield Input(placeholder="0911000001, 0911000002, 0911000003", id="inp-split-users")
+                        yield Button("Create Split Request", id="btn-split-submit")
+                        yield Label("", id="lbl-split-result")
+
+            # 7. FOREX RATES
+            with TabPane("Forex Rates", id="tab-forex"):
+                with ScrollableContainer():
+                    with Container(classes="card"):
+                        yield Label("CBE Daily Forex Exchange Rates (Live)", classes="card-title")
                         yield DataTable(id="tbl-forex")
                         yield Button("Fetch Latest Rates", id="btn-fetch-forex")
 
-                    with Container(classes="card"):
-                        yield Label("CBE Digital Microloan", classes="card-title")
-                        yield Label("Status: ELIGIBLE | Credit Line: 20,000.00 ETB", id="lbl-loan-status")
-                        yield Button("Request Loan Disbursal", id="btn-loan-request")
-
-            # 6. SETTINGS
+            # 8. SETTINGS
             with TabPane("Settings", id="tab-settings"):
                 with ScrollableContainer():
                     with Container(classes="card"):
@@ -258,9 +297,14 @@ class CBEMobileTUI(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        table = self.query_one("#tbl-forex", DataTable)
-        table.add_columns("Currency", "Buying (ETB)", "Selling (ETB)")
+        forex_table = self.query_one("#tbl-forex", DataTable)
+        forex_table.add_columns("Currency", "Buying (ETB)", "Selling (ETB)")
+
+        cards_table = self.query_one("#tbl-cards", DataTable)
+        cards_table.add_columns("Type", "Card Number", "Expiry", "Status")
+
         self.action_fetch_forex()
+        self.action_refresh_cards()
         self.log_msg("CBE Mobile TUI initialized.")
 
     def log_msg(self, msg: str) -> None:
@@ -278,6 +322,14 @@ class CBEMobileTUI(App):
             for r in rates:
                 table.add_row(r.get("currency", "-"), f"{r.get('buying', 0):.2f}", f"{r.get('selling', 0):.2f}")
         self.log_msg("Daily exchange rates updated.")
+
+    def action_refresh_cards(self) -> None:
+        res = self.client.get_cards()
+        cards = res.get("cards", [])
+        table = self.query_one("#tbl-cards", DataTable)
+        table.clear()
+        for c in cards:
+            table.add_row(c.get("cardType", "-"), c.get("maskedNumber", "-"), c.get("expiry", "-"), c.get("status", "-"))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         bid = event.button.id
@@ -325,6 +377,15 @@ class CBEMobileTUI(App):
             self.query_one("#lbl-atm-expiry", Label).update(f"Valid until: {r.get('expiry')}")
             self.log_msg(f"Generated cardless ATM code: {code} for {amt} ETB")
 
+        elif bid == "btn-refresh-cards":
+            self.action_refresh_cards()
+            self.log_msg("Cards list refreshed.")
+
+        elif bid == "btn-card-req":
+            ctype = self.query_one("#sel-new-card", Select).value
+            r = self.client.request_card(self.config.get("account_number"), ctype)
+            self.log_msg(f"Requested card ({ctype}): {r.get('referenceNumber')}")
+
         elif bid == "btn-bill-pay":
             biller = self.query_one("#sel-biller", Select).value
             ref = self.query_one("#inp-bill-ref", Input).value
@@ -337,6 +398,23 @@ class CBEMobileTUI(App):
             amt = float(self.query_one("#inp-toll-amt", Input).value or "0")
             r = self.client.tollroad_recharge(plate, amt)
             self.log_msg(f"Toll recharged for {plate}: {amt} ETB (New Balance: {r.get('newTollBalance')} ETB)")
+
+        elif bid == "btn-loan-disburse":
+            amt = float(self.query_one("#inp-loan-req-amt", Input).value or "5000")
+            r = self.client.request_loan(amt)
+            self.log_msg(f"Loan disbursed: {amt} ETB (ID: {r.get('loanId')})")
+
+        elif bid == "btn-loan-repay":
+            r = self.client.repay_loan("LN-58291", 3587.50)
+            self.log_msg(f"Loan repaid: 3,587.50 ETB (Receipt: {r.get('receiptNumber')})")
+
+        elif bid == "btn-split-submit":
+            amt = float(self.query_one("#inp-split-amt", Input).value or "1200")
+            raw_users = self.query_one("#inp-split-users", Input).value
+            users = [u.strip() for u in raw_users.split(",") if u.strip()]
+            r = self.client.initiate_split_payment(amt, users)
+            self.query_one("#lbl-split-result", Label).update(f"Split {amt:.2f} ETB: {r.get('amountPerPerson')} ETB/person with {len(users)} users.")
+            self.log_msg(f"Split payment created: {r.get('splitId')}")
 
         elif bid == "btn-fetch-forex":
             self.action_fetch_forex()
