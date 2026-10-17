@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cbe-mobile"
+version = "0.1.0"
+description = "Unofficial Commercial Bank of Ethiopia (CBE Mobile) Python SDK and Interactive TUI"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "NeuralS", email = "team@neurals.et" }
+]
+requires-python = ">=3.8"
+dependencies = [
+    "textual>=0.50.0"
+]
+keywords = [
+    "cbe",
+    "cbe-mobile",
+    "ethiopia-banking",
+    "commercial-bank-of-ethiopia",
+    "fintech",
+    "tui",
+    "textual"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Office/Business :: Financial",
+    "Environment :: Console"
+]
+
+[project.scripts]
+cbe = "cbe.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/neurals-et/cbe-mobile"
+Repository = "https://github.com/neurals-et/cbe-mobile"
+
+[tool.setuptools]
+packages = ["cbe"]

@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Reverse-engineering artifacts & binaries
+apktool_out/
+native_libs/
+jadx_out/
+*.apk
+*.so
+*.dex
+
+# Secrets and local configurations
+cbe_settings.json
+.cbe_config.json
+.env
+
+# Distribution and packaging
+dist/
+build/
+*.egg-info/
+*.whl
+*.tar.gz
+*.zip
+
+# Virtual environments
+venv/
+.venv/
