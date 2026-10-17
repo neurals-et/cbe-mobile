@@ -32,6 +32,9 @@ cbe
 
 ### CLI Commands
 ```bash
+# Set your session JWT token and credentials
+cbe config --token <your_jwt_token> --live
+
 # Check balances
 cbe balance
 

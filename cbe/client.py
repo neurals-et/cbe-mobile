@@ -13,9 +13,9 @@ from .config import CBEConfig, DEFAULT_API_BASE, DEFAULT_FOREX_URL
 class CBEClient:
     """Core API Client for CBE Mobile Banking."""
 
-    def __init__(self, config: Optional[CBEConfig] = None):
+    def __init__(self, config: Optional[CBEConfig] = None, token: Optional[str] = None):
         self.config = config or CBEConfig()
-        self.token = self.config.get("access_token", "")
+        self.token = token or self.config.get("access_token", "")
         self.handshake_id = self.config.get("handshake_id", "")
 
     def _headers(self) -> Dict[str, str]:

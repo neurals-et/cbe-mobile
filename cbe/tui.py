@@ -248,6 +248,8 @@ class CBEMobileTUI(App):
                         yield Input(value=self.config.get("phone_number"), id="inp-cfg-phone")
                         yield Label("Device ID:")
                         yield Input(value=self.config.get("device_id"), id="inp-cfg-dev")
+                        yield Label("Session JWT Token:")
+                        yield Input(value=self.config.get("access_token"), id="inp-cfg-token", password=True)
                         with Horizontal():
                             yield Label("Mock Mode: ")
                             yield Switch(value=self.config.get("mock_mode"), id="sw-cfg-mock")
@@ -343,6 +345,9 @@ class CBEMobileTUI(App):
             self.config.set("api_base", self.query_one("#inp-cfg-base", Input).value)
             self.config.set("phone_number", self.query_one("#inp-cfg-phone", Input).value)
             self.config.set("device_id", self.query_one("#inp-cfg-dev", Input).value)
+            token_val = self.query_one("#inp-cfg-token", Input).value
+            self.config.set("access_token", token_val)
+            self.client.token = token_val
             self.config.set("mock_mode", self.query_one("#sw-cfg-mock", Switch).value)
             self.config.save()
             self.log_msg("CBE Configuration saved.")
