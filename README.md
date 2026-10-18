@@ -32,7 +32,13 @@ pip install .
 
 ### Terminal Dashboard
 ```bash
+# Python Textual TUI
 cbe
+
+# Or Bun + OpenTUI Terminal Interface
+cd opentui
+bun install
+bun run start
 ```
 
 ### CLI Commands

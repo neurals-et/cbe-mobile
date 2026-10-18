@@ -27,3 +27,6 @@ build/
 # Virtual environments
 venv/
 .venv/
+
+node_modules/
+*.log
