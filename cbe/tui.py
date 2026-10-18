@@ -10,8 +10,16 @@ from textual.widgets import (
     Select, Switch, DataTable, Log
 )
 from textual.binding import Binding
-from .client import CBEClient
-from .config import CBEConfig
+import os
+import sys
+
+try:
+    from .client import CBEClient
+    from .config import CBEConfig
+except (ImportError, ValueError):
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from cbe.client import CBEClient
+    from cbe.config import CBEConfig
 
 
 class CBEMobileTUI(App):
@@ -37,7 +45,6 @@ class CBEMobileTUI(App):
     .card {
         background: #2b0b30;
         border: solid #701a75;
-        border-radius: 1;
         padding: 1 2;
         margin: 1;
     }
@@ -59,7 +66,6 @@ class CBEMobileTUI(App):
     .bal-val {
         color: #fde047;
         text-style: bold;
-        font-size: 140%;
     }
 
     .code-box {
@@ -73,7 +79,6 @@ class CBEMobileTUI(App):
     .code-val {
         color: #34d399;
         text-style: bold;
-        font-size: 160%;
     }
 
     Button {
