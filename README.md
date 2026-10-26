@@ -23,7 +23,7 @@ Python client and interactive terminal interface for CBE Mobile Banking.
 ## Installation
 
 ```bash
-pip install .
+pip install cbe-mobile
 ```
 
 ---
